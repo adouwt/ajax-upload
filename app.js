@@ -14,7 +14,7 @@ app.use(express.static(path.join(__dirname, 'static')));
 //   res.redirect('upload2.html');
 // });
 app.get('/', function(req, res){  
-  res.sendFile('upload2.html', { root: __dirname });  
+  res.sendFile('upload.html', { root: __dirname });  
 });  
 app.post('/upload', upload.single('test-upload'), (req, res) => {
   // 没有附带文件
