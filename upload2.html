@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <link href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.css" rel="stylesheet">
+  <style>
+    .progress-area {
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="">
+    <p>文件上传</p>
+    <div>
+      <input type="file" name="file" id="file" />
+      <div class="img-preview">
+          <p>图片预览（如果上传文件时图片）</p>
+          <img id="image" src="" width="200" />
+      </div>
+      <button id="upload">上传</button>
+      <button id="btn">终止上传</button>
+      <div class="progress-area">
+        进度
+        <div class="progress">
+          <div class="progress-bar" id="progress" role="progressbar"  aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function () {
+        'use strict';
+        var file = document.querySelector('#file');
+        var upload = document.querySelector('#upload');
+        var progress = document.querySelector('#progress');
+        var image = document.querySelector('#image');
+        var xhr = new XMLHttpRequest();
+
+        var loaded = 0;
+        var total = 0;
+
+        upload.addEventListener('click', uploadFile, false);
+        file.addEventListener('change', previewImage, false);
+
+        // 点击上传
+        function uploadFile(event) {
+          if(!file.files[0]) {
+            alert('请选择文件')
+            return
+          }
+          var formData = new FormData();
+          formData.append('test-upload', file.files[0]);
+          xhr.onload = uploadSuccess;
+          xhr.upload.onprogress = setProgress;
+          xhr.open('post', '/upload2', true);
+          xhr.send(formData);
+        }
+
+        // 成功上传
+        function uploadSuccess(event) {
+          if (xhr.readyState === 4 && xhr.status === 200) {
+            setTimeout(()=> {
+              alert('上传成功')
+              window.location.href="/"
+            },1000)
+          }
+        }
+
+        // 进度条
+        function setProgress(event) {
+          console.log(event)
+          if (event.lengthComputable) {
+            loaded = event.loaded
+            total = event.total
+            var complete = Number.parseInt(event.loaded / event.total * 100);
+            progress.style.width = complete + '%';
+            progress.innerHTML = complete + '%';
+          }
+        }
+
+        // 图片预览
+        function previewImage(event) {
+          var reader = new FileReader();
+          reader.onload = function (event) {
+            image.src = event.target.result;
+          };
+          reader.readAsDataURL(event.target.files[0]);
+        }
+
+        //++++++++++++++++++++++++++++++++++++++++++++
+        xhr.onloadstart = function(){
+          console.log("上传开始");    
+        }
+        btn.onclick = function(){
+          xhr.abort();
+          console.log("上传被终止.");
+          progress.style.width = 0 + '%';
+          progress.innerHTML = 0 + '%';
+          // 这里调用取消上传的代码
+        };
+        xhr.ontimeout = function(){
+          console.log('上传超时.');
+        }
+        // xhr.timeout = 50000; // 默认为0 没有时间限制
+        // xhr.onabort = function(){
+        //   console.log("The transfer has been canceled by the user.");
+        // }
+        xhr.onerror = function(){
+          console.log("上传错误，可能是断网了，也可能是断请求服务了.");  // 这里存在异步传输问题
+          return
+        }
+        xhr.onloadend = function(){
+          console.log("请求结束"); // 发送上传的请求，至于有没有上传成功，不清楚，可能失败 成功，这里只是请求结束了 
+        }
+        // +++++++++++++++++++++++++++++++++++++++++++
+      })();
+  </script>
+</body>
+</html>
