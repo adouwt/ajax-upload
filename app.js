@@ -52,5 +52,5 @@ app.get('/abort', upload.single('test-upload'), (req, res)=>{
 })
 
 app.listen(port, () => {
-  console.log("[Server] localhost:" + port);
+  console.log(`[Server] localhost:port ${port} ,timeNow: ${new Date()}`);
 });

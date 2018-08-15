@@ -17,9 +17,11 @@
     <p>文件上传</p>
     <div>
       <input type="file" name="file" id="file" />
-      <div class="img-preview">
-          <p>图片预览（如果上传文件时图片）</p>
-          <img id="image" src="" width="200" />
+      <div>
+        <p>图片预览（如果上传文件时图片）</p>
+        <div class="img-preview">
+            <img id="image" src="" width="200" />
+        </div>
       </div>
       <button id="upload">上传</button>
       <button id="btn">终止上传</button>
@@ -27,6 +29,10 @@
         进度
         <div class="progress">
           <div class="progress-bar" id="progress" role="progressbar"  aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+        <div>
+          <p id="time"></p>
+
         </div>
       </div>
     </div>
@@ -37,11 +43,12 @@
         var file = document.querySelector('#file');
         var upload = document.querySelector('#upload');
         var progress = document.querySelector('#progress');
+        var time = document.querySelector('#time');
         var image = document.querySelector('#image');
+        var imgPreview = document.querySelector('.img-preview');
         var xhr = new XMLHttpRequest();
 
-        var loaded = 0;
-        var total = 0;
+        var loaded = 0, ot = 0, total = 0, oloaded = 0 ;//;
 
         upload.addEventListener('click', uploadFile, false);
         file.addEventListener('change', previewImage, false);
@@ -52,11 +59,10 @@
             alert('请选择文件')
             return
           }
-          if(file.files[0].size>1000000) {
+          if(file.files[0].size>10000000) {
             alert('文件不得超过10M')
             return
-          }
-          console.log(file.files[0])
+          } 
           var formData = new FormData();
           formData.append('test-upload', file.files[0]);
           xhr.onload = uploadSuccess;
@@ -70,25 +76,56 @@
           if (xhr.readyState === 4 && xhr.status === 200) {
             setTimeout(()=> {
               alert('上传成功')
-              window.location.reload();
+              // window.location.reload();
             },1000)
           }
         }
 
         // 进度条
         function setProgress(event) {
-          console.log(event)
-          if (event.lengthComputable) {
-            loaded = event.loaded
-            total = event.total
-            var complete = Number.parseInt(event.loaded / event.total * 100);
-            progress.style.width = complete + '%';
-            progress.innerHTML = complete + '%';
+          // event.total是需要传输的总字节，event.loaded是已经传输的字节。如果event.lengthComputable不为真，则event.total等于0
+          if (event.lengthComputable) {//
+              loaded = event.loaded
+              total = event.total
+              var complete = (event.loaded / event.total * 100).toFixed(1);
+              progress.innerHTML = Math.round(complete) + "%";
+              progress.style.width = complete + '%';
           }
+          
+          var time = document.getElementById("time");
+          var nt = new Date().getTime();//获取当前时间
+          var pertime = (nt-ot)/1000; //计算出上次调用该方法时到现在的时间差，单位为s
+          ot = new Date().getTime(); //重新赋值时间，用于下次计算
+          
+          var perload = event.loaded - oloaded; //计算该分段上传的文件大小，单位b       
+          oloaded = event.loaded;//重新赋值已上传文件大小，用以下次计算
+      
+          //上传速度计算
+          var speed = perload/pertime;//单位b/s
+          var bspeed = speed;
+          var units = 'b/s';//单位名称
+          if(speed/1024>1){
+              speed = speed/1024;
+              units = 'k/s';
+          }
+          if(speed/1024>1){
+              speed = speed/1024;
+              units = 'M/s';
+          }
+          speed = speed.toFixed(1);
+          //剩余时间
+          var resttime = ((event.total-event.loaded)/bspeed).toFixed(1);
+          time.innerHTML = '传输速度：'+speed+units+'，剩余时间：'+resttime+'s';
+          // if(bspeed==0) time.innerHTML = '上传已取消';
         }
-
         // 图片预览
         function previewImage(event) {
+          if (!file.files[0].type) {
+            imgPreview.style.display = 'none'
+          }
+          if(file.files[0].type.indexOf('image/') < -1) {
+            imgPreview.style.display = 'none'
+          }
           var reader = new FileReader();
           reader.onload = function (event) {
             image.src = event.target.result;
