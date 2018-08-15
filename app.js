@@ -10,10 +10,11 @@ app.set('port', port);
 // index.html, index.js放在static文件夹中
 app.use(express.static(path.join(__dirname, 'static')));
 
-// app.get('/', (req, res) => {
-//   res.redirect('upload2.html');
-// });
-app.get('/', function(req, res){  
+// 重定向
+app.get('/', function(req, res){
+  res.redirect('/ajax-upload');
+}); 
+app.get('/ajax-upload', function(req, res){  
   res.sendFile('upload.html', { root: __dirname });  
 });  
 app.post('/upload', upload.single('test-upload'), (req, res) => {
