@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <title>ajax-upload</title>
   <link href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.css" rel="stylesheet">
   <style>
     .progress-area {
@@ -20,7 +20,6 @@
       <div>
         <p>图片预览（如果上传文件时图片）</p>
         <div class="img-preview">
-            <img id="image" src="" width="200" />
         </div>
       </div>
       <button id="upload">上传</button>
@@ -32,7 +31,6 @@
         </div>
         <div>
           <p id="time"></p>
-
         </div>
       </div>
     </div>
@@ -44,15 +42,11 @@
         var upload = document.querySelector('#upload');
         var progress = document.querySelector('#progress');
         var time = document.querySelector('#time');
-        var image = document.querySelector('#image');
         var imgPreview = document.querySelector('.img-preview');
         var xhr = new XMLHttpRequest();
-
         var loaded = 0, ot = 0, total = 0, oloaded = 0 ;//;
-
         upload.addEventListener('click', uploadFile, false);
         file.addEventListener('change', previewImage, false);
-
         // 点击上传
         function uploadFile(event) {
           if(!file.files[0]) {
@@ -70,17 +64,15 @@
           xhr.open('post', '/upload', true);
           xhr.send(formData);
         }
-
         // 成功上传
         function uploadSuccess(event) {
           if (xhr.readyState === 4 && xhr.status === 200) {
             setTimeout(()=> {
               alert('上传成功')
-              // window.location.reload();
+              window.location.reload();
             },1000)
           }
         }
-
         // 进度条
         function setProgress(event) {
           // event.total是需要传输的总字节，event.loaded是已经传输的字节。如果event.lengthComputable不为真，则event.total等于0
@@ -91,15 +83,12 @@
               progress.innerHTML = Math.round(complete) + "%";
               progress.style.width = complete + '%';
           }
-          
           var time = document.getElementById("time");
           var nt = new Date().getTime();//获取当前时间
           var pertime = (nt-ot)/1000; //计算出上次调用该方法时到现在的时间差，单位为s
           ot = new Date().getTime(); //重新赋值时间，用于下次计算
-          
           var perload = event.loaded - oloaded; //计算该分段上传的文件大小，单位b       
           oloaded = event.loaded;//重新赋值已上传文件大小，用以下次计算
-      
           //上传速度计算
           var speed = perload/pertime;//单位b/s
           var bspeed = speed;
@@ -120,19 +109,24 @@
         }
         // 图片预览
         function previewImage(event) {
-          if (!file.files[0].type) {
-            imgPreview.style.display = 'none'
+          imgPreview.innerHTML = '' 
+          // 每次重新选择文件的时候，都会去除上次选择产生的img标签
+          var isImg = (event.target.files[0].type).indexOf('image/') > -1;
+          if(isImg) {
+            // 如果是图片 就解析图片预览
+            var img = document.createElement('img')
+            imgPreview.appendChild(img)
+            var reader = new FileReader();
+            reader.onload = function (event) {
+              img.src = event.target.result;
+              img.width = '200'
+            };
+            reader.readAsDataURL(event.target.files[0]);
+          } else {
+            // imgPreview.appendChild('<img src=""/>')
+             // 可以为非图片文件选择一个默认的文件logo
           }
-          if(file.files[0].type.indexOf('image/') < -1) {
-            imgPreview.style.display = 'none'
-          }
-          var reader = new FileReader();
-          reader.onload = function (event) {
-            image.src = event.target.result;
-          };
-          reader.readAsDataURL(event.target.files[0]);
         }
-
         //++++++++++++++++++++++++++++++++++++++++++++
         xhr.onloadstart = function(){
           console.log("上传开始");    
